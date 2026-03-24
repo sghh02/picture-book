@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:picture_book/app/router.dart';
 
@@ -29,7 +30,7 @@ class HomePage extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      Gap(4),
                       Text('すてきな えほんに であおう'),
                     ],
                   ),
@@ -42,9 +43,9 @@ class HomePage extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const Gap(24),
             const _SectionTitle(title: 'ねんれいフィルター'),
-            const SizedBox(height: 12),
+            const Gap(12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -55,9 +56,9 @@ class HomePage extends StatelessWidget {
                 _FilterChip(label: '6さい〜'),
               ],
             ),
-            const SizedBox(height: 28),
+            const Gap(28),
             const _SectionTitle(title: 'おすすめ'),
-            const SizedBox(height: 12),
+            const Gap(12),
             GestureDetector(
               key: sampleBookCardKey,
               onTap: () => context.pushNamed(
@@ -96,16 +97,16 @@ class HomePage extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      Gap(4),
                       Text('ビューアルートの動作確認用カード'),
                     ],
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 28),
+            const Gap(28),
             const _SectionTitle(title: 'にんきランキング'),
-            const SizedBox(height: 12),
+            const Gap(12),
             const _PlaceholderPanel(
               title: 'ランキングは次のステップで接続します',
               subtitle: 'Firestore と状態管理を入れる前のプレースホルダーです。',
@@ -182,7 +183,7 @@ class _PlaceholderPanel extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
             ),
-            const SizedBox(height: 8),
+            const Gap(8),
             Text(subtitle),
           ],
         ),
