@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:picture_book/app/router.dart';
 
@@ -35,10 +36,10 @@ class MyPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 88),
+                  const Gap(88),
                 ],
               ),
-              const SizedBox(height: 20),
+              const Gap(20),
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
@@ -61,7 +62,7 @@ class MyPage extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const Gap(24),
               const Expanded(
                 child: _EmptyState(
                   title: 'まだ よんだ えほんが ありません。',
@@ -135,7 +136,7 @@ class _EmptyState extends StatelessWidget {
                 size: 48,
                 color: Color(0xFFC4825A),
               ),
-              const SizedBox(height: 16),
+              const Gap(16),
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -143,7 +144,7 @@ class _EmptyState extends StatelessWidget {
                     ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const Gap(8),
               Text(
                 subtitle,
                 textAlign: TextAlign.center,

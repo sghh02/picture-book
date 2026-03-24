@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:picture_book/app/router.dart';
 
@@ -34,7 +35,7 @@ class BookViewerPage extends StatelessWidget {
                 icon: const Icon(Icons.arrow_back),
                 tooltip: 'ホームへ戻る',
               ),
-              const SizedBox(height: 24),
+              const Gap(24),
               Expanded(
                 child: Card(
                   clipBehavior: Clip.antiAlias,
@@ -57,7 +58,7 @@ class BookViewerPage extends StatelessWidget {
                           size: 72,
                           color: Color(0xFFC4825A),
                         ),
-                        const SizedBox(height: 20),
+                        const Gap(20),
                         Text(
                           'Book ID',
                           style:
@@ -65,7 +66,7 @@ class BookViewerPage extends StatelessWidget {
                                     fontWeight: FontWeight.w700,
                                   ),
                         ),
-                        const SizedBox(height: 8),
+                        const Gap(8),
                         Text(
                           bookId,
                           style:
@@ -73,7 +74,7 @@ class BookViewerPage extends StatelessWidget {
                                     fontWeight: FontWeight.w700,
                                   ),
                         ),
-                        const SizedBox(height: 12),
+                        const Gap(12),
                         const Text(
                           '全画面ビューア本体は次のステップで実装します。',
                           textAlign: TextAlign.center,
@@ -83,7 +84,7 @@ class BookViewerPage extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const Gap(16),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.tonal(
