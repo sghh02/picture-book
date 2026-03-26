@@ -4,10 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:picture_book/app/app.dart';
 import 'package:picture_book/app/router.dart';
+import 'package:picture_book/features/book/data/book_viewer_local_store.dart';
 import 'package:picture_book/features/book/data/books_repository.dart';
-import 'package:picture_book/features/book/presentation/book_viewer_page.dart';
-import 'package:picture_book/features/book/providers/books_providers.dart';
 import 'package:picture_book/features/book/domain/book.dart';
+import 'package:picture_book/features/book/presentation/book_viewer_page.dart';
+import 'package:picture_book/features/book/providers/book_viewer_providers.dart';
+import 'package:picture_book/features/book/providers/books_providers.dart';
 import 'package:picture_book/features/home/presentation/home_page.dart';
 import 'package:picture_book/features/home/providers/home_providers.dart';
 import 'package:picture_book/features/my_page/presentation/my_page.dart';
@@ -17,12 +19,15 @@ void main() {
     WidgetTester tester, {
     BooksRepository? repository,
     GoRouter? router,
+    BookViewerLocalStore? localStore,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           if (repository != null)
             booksRepositoryProvider.overrideWithValue(repository),
+          if (localStore != null)
+            bookViewerLocalStoreProvider.overrideWithValue(localStore),
         ],
         child: router == null
             ? const PictureBookApp()
@@ -69,7 +74,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('sample-book'), findsOneWidget);
+    expect(find.text('くもの子マルの旅'), findsWidgets);
+    expect(find.byKey(BookViewerPage.pageNumberKey), findsOneWidget);
+    expect(find.text('1 / 6'), findsOneWidget);
   });
 
   testWidgets('router factory can start at my page', (
@@ -90,7 +97,7 @@ void main() {
     await tester.tap(find.byKey(HomePage.sampleBookCardKey));
     await tester.pumpAndSettle();
 
-    expect(find.text('sample-book'), findsOneWidget);
+    expect(find.text('くもの子マルの旅'), findsWidgets);
   });
 
   testWidgets('platform back returns from sample book viewer to home', (
@@ -144,6 +151,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await _advanceViewerToEnd(tester, turns: 8);
+
     await tester.tap(find.byKey(BookViewerPage.homeButtonKey));
     await tester.pumpAndSettle();
 
@@ -186,7 +195,123 @@ void main() {
     await tester.tap(find.byKey(HomePage.rankingItemKey('rainbow-fish')));
     await tester.pumpAndSettle();
 
-    expect(find.text('rainbow-fish'), findsOneWidget);
+    expect(find.text('にじいろのさかな'), findsWidgets);
+  });
+
+  testWidgets('viewer page navigation updates reading history', (
+    WidgetTester tester,
+  ) async {
+    final localStore = _MemoryBookViewerLocalStore();
+
+    await pumpApp(
+      tester,
+      router: createAppRouter(initialLocation: '/book/sample-book'),
+      localStore: localStore,
+    );
+    await tester.pumpAndSettle();
+
+    expect(localStore.history.single.lastPage, 0);
+
+    final controller = tester
+        .widget<PageView>(find.byType(PageView))
+        .controller!;
+    controller.jumpToPage(1);
+    await tester.pumpAndSettle();
+
+    expect(localStore.history.single.lastPage, 1);
+
+    controller.jumpToPage(2);
+    await tester.pumpAndSettle();
+
+    expect(localStore.history.single.lastPage, 2);
+
+    controller.jumpToPage(1);
+    await tester.pumpAndSettle();
+
+    expect(localStore.history.single.lastPage, 1);
+  });
+
+  testWidgets('viewer like state persists across rebuild and end screen', (
+    WidgetTester tester,
+  ) async {
+    final localStore = _MemoryBookViewerLocalStore();
+
+    await pumpApp(
+      tester,
+      router: createAppRouter(initialLocation: '/book/sample-book'),
+      localStore: localStore,
+    );
+    await tester.pumpAndSettle();
+
+    expect(localStore.likedBookIds, isEmpty);
+    expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+
+    final likeButton = tester.widget<IconButton>(
+      find.byKey(BookViewerPage.likeButtonKey),
+    );
+    likeButton.onPressed!.call();
+    await tester.pumpAndSettle();
+
+    expect(localStore.likedBookIds, {'sample-book'});
+    expect(find.byIcon(Icons.favorite), findsOneWidget);
+
+    await pumpApp(
+      tester,
+      router: createAppRouter(initialLocation: '/book/sample-book'),
+      localStore: localStore,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.favorite), findsOneWidget);
+
+    await _advanceViewerToEnd(tester, turns: 8);
+
+    expect(find.byKey(BookViewerPage.endLikeButtonKey), findsOneWidget);
+    expect(find.text('いいね済み'), findsOneWidget);
+  });
+
+  testWidgets('viewer overlay auto hides after timeout', (
+    WidgetTester tester,
+  ) async {
+    await pumpApp(
+      tester,
+      router: createAppRouter(initialLocation: '/book/sample-book'),
+      localStore: _MemoryBookViewerLocalStore(),
+    );
+    await tester.pumpAndSettle();
+
+    var overlay = tester.widget<AnimatedOpacity>(
+      find.byKey(BookViewerPage.overlayKey),
+    );
+    expect(overlay.opacity, 1);
+
+    await tester.pump(const Duration(seconds: 4));
+
+    overlay = tester.widget<AnimatedOpacity>(
+      find.byKey(BookViewerPage.overlayKey),
+    );
+    expect(overlay.opacity, 0);
+  });
+
+  testWidgets('viewer reaches end screen and returns home', (
+    WidgetTester tester,
+  ) async {
+    await pumpApp(
+      tester,
+      router: createAppRouter(initialLocation: '/book/sample-book'),
+      localStore: _MemoryBookViewerLocalStore(),
+    );
+    await tester.pumpAndSettle();
+
+    await _advanceViewerToEnd(tester, turns: 8);
+
+    expect(find.byKey(BookViewerPage.endScreenKey), findsOneWidget);
+    expect(find.text('おしまい'), findsOneWidget);
+
+    await tester.tap(find.text('ホームにもどる').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('えほんのもり'), findsOneWidget);
   });
 
   testWidgets('failed books load shows retry action', (
@@ -268,5 +393,54 @@ class _FailingBooksRepository implements BooksRepository {
   @override
   Future<List<Book>> fetchPublishedBooks() {
     return Future<List<Book>>.error(Exception('failed'));
+  }
+}
+
+class _MemoryBookViewerLocalStore implements BookViewerLocalStore {
+  Set<String> likedBookIds = <String>{};
+  List<ReadingHistoryEntry> history = const <ReadingHistoryEntry>[];
+
+  @override
+  Future<List<ReadingHistoryEntry>> loadReadingHistory() async => history;
+
+  @override
+  Future<Set<String>> loadLikedBookIds() async => likedBookIds;
+
+  @override
+  Future<void> recordHistory({
+    required String bookId,
+    required int lastPage,
+    required DateTime readAt,
+  }) async {
+    history = [
+      ReadingHistoryEntry(bookId: bookId, readAt: readAt, lastPage: lastPage),
+      for (final entry in history)
+        if (entry.bookId != bookId) entry,
+    ];
+  }
+
+  @override
+  Future<Set<String>> toggleLike(String bookId) async {
+    final next = Set<String>.from(likedBookIds);
+    if (!next.add(bookId)) {
+      next.remove(bookId);
+    }
+    likedBookIds = next;
+    return likedBookIds;
+  }
+}
+
+Future<void> _advanceViewerToEnd(
+  WidgetTester tester, {
+  required int turns,
+}) async {
+  final controller = tester.widget<PageView>(find.byType(PageView)).controller!;
+
+  for (var index = 0; index < turns; index++) {
+    if (find.byKey(BookViewerPage.endScreenKey).evaluate().isNotEmpty) {
+      return;
+    }
+    controller.jumpToPage(index + 1);
+    await tester.pumpAndSettle();
   }
 }
